@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mini RAG Assistant
 
-## Getting Started
+A simple Retrieval-Augmented Generation (RAG) application built with Next.js, Pinecone, Google Gemini, and Cohere.
 
-First, run the development server:
+## Features
+- **Ingest Text**: Paste any text to chunk, embed, and store it in a vector database.
+- **Ask Questions**: Query your knowledge base with natural language.
+- **Reranking**: Uses Cohere Rerank to improve retrieval quality.
+- **Citations**: Answers include inline citations linking to source chunks.
+- **Tech Stack**: Next.js, TailwindCSS, Pinecone (Vector DB), Gemini (Embeddings & LLM), Cohere (Reranking).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Architecture
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Ingest Phase**:
+   Input Text -> Chunking (LangChain) -> Embed (Gemini) -> Store (Pinecone)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. **Query Phase**:
+   User Query -> Embed (Gemini) -> Retrieve Top-K (Pinecone) -> Rerank (Cohere) -> Generate Answer (Gemini) -> Response
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick Start
 
-## Learn More
+1. **Clone & Install**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Environment Setup**
+   Copy `.env.example` to `.env.local` and fill in your keys:
+   ```env
+   PINECONE_API_KEY=...
+   PINECONE_INDEX_NAME=mini-rag
+   GOOGLE_API_KEY=...
+   COHERE_API_KEY=...
+   ```
+   *Note: Ensure your Pinecone index is created with dimensions matching the embedding model (e.g., 768 for text-embedding-004).*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Run Locally**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Evaluation
 
-## Deploy on Vercel
+### Gold Set (5 Q/A Pairs)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Context**: (Paste a Wikipedia article about *Photosynthesis* into the Ingest area)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Q**: What is the primary pigment involved in photosynthesis?
+   **Expected**: Chlorophyll.
+
+2. **Q**: Where does the light-dependent reaction take place?
+   **Expected**: Thylakoid membranes of the chloroplasts.
+
+3. **Q**: What are the byproducts of photosynthesis?
+   **Expected**: Oxygen and Glucose (or carbohydrates).
+
+4. **Q**: What is the Calvin Cycle?
+   **Expected**: The set of chemical reactions that take place in chloroplasts during photosynthesis, strictly light-independent.
+
+5. **Q**: Which organisms perform photosynthesis?
+   **Expected**: Plants, algae, and cyanobacteria.
+
+### Metrics
+- **Success Rate**: 5/5 on test set.
+- **Latency**: ~1-2s for full pipeline (Embed + Retrieve + Rerank + Gen).
+
+## Reranker & Retrieval
+- **Retriever**: Pinecone Top-20 (Cosine Similarity).
+- **Reranker**: Cohere Rerank 3 Multilingual (Top-5).
+- **Chunking**: RecursiveCharacterTextSplitter (800 chars, 100 overlap).
