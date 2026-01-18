@@ -70,6 +70,33 @@ A simple Retrieval-Augmented Generation (RAG) application built with Next.js, Pi
 - **Reranker**: Cohere Rerank 3 Multilingual (Top-5).
 - **Chunking**: RecursiveCharacterTextSplitter (800 chars, 100 overlap).
 
+  ## ✅ Remarks
+### ⚠️ Limits
+- **Data freshness:** Embeddings and stored chunks are static after ingest — updates require re-ingestion or incremental update logic.  
+- **Hallucination risk:** The generator can produce plausible-sounding but incorrect answers; citations reduce but do not eliminate this.  
+- **Privacy & compliance:** Stored text may contain PII — no automatic redaction is provided.  
+- **Cost & rate limits:** Embedding, reranking, and generation APIs incur cost and rate constraints.  
+- **Latency & scale:** Pinecone + Cohere rerank + LLM increases latency for large corpora without caching or batching.
+
+---
+
+### 🔧 Tradeoffs
+- **Rerank vs latency:** Reranking improves accuracy but increases cost and response time.  
+- **Chunk size vs context:** Larger chunks reduce vector count but can dilute relevance and citation granularity; smaller chunks improve precision but increase storage/compute.  
+- **Vendor lock-in vs convenience:** Using Gemini/Cohere/Pinecone eases integration but ties you to their models and pricing.  
+- **Aggressive filtering vs recall:** Tight filters reduce hallucinations but risk dropping relevant context.
+
+---
+
+### 💡 Next steps
+1. **Expand evaluation:** Add a larger gold dataset, automated metrics (precision/recall, EM/F1), and CI-based regression tests.  
+2. **Safety & privacy:** Add PII detection/redaction pre-ingest and an opt-in policy for sensitive data.  
+3. **Configuration & tuning:** Expose chunk size, overlap, top-K, and reranker toggles for easy experimentation.  
+4. **Performance improvements:** Add caching, batching, and optional ANN settings to reduce latency.  
+5. **Testing & robustness:** Add unit/integration tests with mocked APIs and an e2e smoke test.  
+6. **Production readiness:** Add incremental ingestion, doc versioning, and monitoring (latency, cost, retrieval quality).
+
+
   ## Resume and Portfolio
   - **Resume**: https://drive.google.com/file/d/1laIpa8nPc1Ut6dMhUm49TgZCwoBQcVoH/view?usp=drive_link
   - **Portfolio**: https://vinaymendole.vercel.app
