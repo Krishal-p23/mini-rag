@@ -107,5 +107,3 @@ A Wikipedia article on *Photosynthesis* ingested into the system.
 ---
 ## Resume:
 https://purple-sarajane-55.tiiny.site
-## Portfolio:
-https://mini-rag-eta.vercel.app/
