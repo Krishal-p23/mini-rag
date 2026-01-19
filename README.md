@@ -1,102 +1,111 @@
 # Mini RAG Assistant
 
-A simple Retrieval-Augmented Generation (RAG) application built with Next.js, Pinecone, Google Gemini, and Cohere.
+Mini RAG Assistant is a lightweight Retrieval-Augmented Generation (RAG) application designed to help users query custom text sources using natural language. It combines modern LLMs with vector search and reranking to deliver grounded, citation-backed answers.
 
-## Features
-- **Ingest Text**: Paste any text to chunk, embed, and store it in a vector database.
-- **Ask Questions**: Query your knowledge base with natural language.
-- **Reranking**: Uses Cohere Rerank to improve retrieval quality.
-- **Citations**: Answers include inline citations linking to source chunks.
-- **Tech Stack**: Next.js, TailwindCSS, Pinecone (Vector DB), Gemini (Embeddings & LLM), Cohere (Reranking).
+The project focuses on clarity, modular design, and experimentation with RAG pipelines rather than production-scale complexity.
 
-## Architecture
+## Key Features
+-**Text Ingestion**
+Paste raw text, which is automatically chunked, embedded, and stored in a vector database.
 
-1. **Ingest Phase**:
-   Input Text -> Chunking (LangChain) -> Embed (Gemini) -> Store (Pinecone)
+- **Natural Language Q&A**
+Ask questions in plain English and get context-aware answers from your ingested data.
 
-2. **Query Phase**:
-   User Query -> Embed (Gemini) -> Retrieve Top-K (Pinecone) -> Rerank (Cohere) -> Generate Answer (Gemini) -> Response
+- **Reranked Retrieval**
+Uses a reranking step to improve the relevance of retrieved chunks before generation.
 
-## Quick Start
+- **Source Citations**
+Generated answers include inline references pointing back to the original text chunks.
 
-1. **Clone & Install**
+- **Modern Tech Stack**
+Built with Next.js, Tailwind CSS, Pinecone, Google Gemini, and Cohere.
+
+## How it works
+1. **Ingestion Pipeline**
+   Input Text
+   → Chunking
+   → Embedding
+   → Vector Storage
+   
+2. **Query Pipeline**
+   User Query
+   → Embedding
+   → Vector Search
+   → Reranking
+   → Answer Generation
+   
+## Getting Started
+
+1. **Install Dependencies**
    ```bash
    npm install
    ```
 
-2. **Environment Setup**
-   Copy `.env.example` to `.env.local` and fill in your keys:
+2. **Environment Configuration**
+   Create a `.env.local` file using `.env.example` as reference and add your API keys:
+   
    ```env
-   PINECONE_API_KEY=...
+   PINECONE_API_KEY=your_key
    PINECONE_INDEX_NAME=mini-rag
-   GOOGLE_API_KEY=...
-   COHERE_API_KEY=...
+   GOOGLE_API_KEY=your_key
+   COHERE_API_KEY=your_key
    ```
-   *Note: Ensure your Pinecone index is created with dimensions matching the embedding model (e.g., 768 for text-embedding-004).*
+   *Make sure the Pinecone index dimension matches the embedding model (e.g., 768 for text-embedding-004).*
 
-3. **Run Locally**
+4. **Run the App Locally**
    ```bash
    npm run dev
    ```
-   Open [http://localhost:3000](http://localhost:3000).
+   Open your browser at http://localhost:3000.
 
 ## Evaluation
 
-### Gold Set (5 Q/A Pairs)
+To validate the system, a small gold dataset was used.
 
-**Context**: (Paste a Wikipedia article about *Photosynthesis* into the Ingest area)
+**Test Context:**
+A Wikipedia article on *Photosynthesis* ingested into the system.
 
-1. **Q**: What is the primary pigment involved in photosynthesis?
-   **Expected**: Chlorophyll.
+**Sample Questions**
+   1. Primary pigment involved in photosynthesis → Chlorophyll
+   2. Location of light-dependent reactions → Thylakoid membranes
+   3. Main byproducts → Oxygen and glucose
+   4. Calvin Cycle definition → Light-independent reactions in chloroplasts
+   5. Organisms that photosynthesize → Plants, algae, cyanobacteria
 
-2. **Q**: Where does the light-dependent reaction take place?
-   **Expected**: Thylakoid membranes of the chloroplasts.
+**Observations**
+- Accuracy: 5/5 correct responses
+- Latency: ~1–7 seconds per full pipeline run
 
-3. **Q**: What are the byproducts of photosynthesis?
-   **Expected**: Oxygen and Glucose (or carbohydrates).
+## 🔍 Retrieval & Reranking Details**
+   1. Vector Search: Pinecone (Top-20 results, cosine similarity)
+   2. Reranker: Cohere Rerank v3 Multilingual (Top-5)
+   3. Chunking Strategy:
+         - Chunk size: 800 characters
+         - Overlap: 100 characters
 
-4. **Q**: What is the Calvin Cycle?
-   **Expected**: The set of chemical reactions that take place in chloroplasts during photosynthesis, strictly light-independent.
+## ⚠️ Limitations
+1. **Static knowledge base:** Content updates require re-ingestion
+2. **Possible hallucinations:** Citations reduce risk but don’t fully eliminate it
+3. **Privacy concerns:** No automatic PII detection or redaction
+4. **Latency & cost:** Multiple API calls add overhead
+5. **Scalability:** Not optimized for large-scale corpora without caching
 
-5. **Q**: Which organisms perform photosynthesis?
-   **Expected**: Plants, algae, and cyanobacteria.
-
-### Metrics
-- **Success Rate**: 5/5 on test set.
-- **Latency**: ~1-7s for full pipeline (Embed + Retrieve + Rerank + Gen).
-
-## Reranker & Retrieval
-- **Retriever**: Pinecone Top-20 (Cosine Similarity).
-- **Reranker**: Cohere Rerank 3 Multilingual (Top-5).
-- **Chunking**: RecursiveCharacterTextSplitter (800 chars, 100 overlap).
-
-  ## ✅ Remarks
-### ⚠️ Limits
-- **Data freshness:** Embeddings and stored chunks are static after ingest — updates require re-ingestion or incremental update logic.  
-- **Hallucination risk:** The generator can produce plausible-sounding but incorrect answers; citations reduce but do not eliminate this.  
-- **Privacy & compliance:** Stored text may contain PII — no automatic redaction is provided.  
-- **Cost & rate limits:** Embedding, reranking, and generation APIs incur cost and rate constraints.  
-- **Latency & scale:** Pinecone + Cohere rerank + LLM increases latency for large corpora without caching or batching.
-
----
-
-### 🔧 Tradeoffs
-- **Rerank vs latency:** Reranking improves accuracy but increases cost and response time.  
-- **Chunk size vs context:** Larger chunks reduce vector count but can dilute relevance and citation granularity; smaller chunks improve precision but increase storage/compute.  
-- **Vendor lock-in vs convenience:** Using Gemini/Cohere/Pinecone eases integration but ties you to their models and pricing.  
-- **Aggressive filtering vs recall:** Tight filters reduce hallucinations but risk dropping relevant context.
+## 🔧 Design Trade-offs
+- **Accuracy vs speed:** Reranking improves relevance but increases response time
+- **Chunk size vs precision:** Smaller chunks improve citation accuracy but increase storage cost
+- **Vendor convenience vs lock-in:** Managed services simplify development but limit flexibility
 
 ---
-
-### 💡 Next steps
-1. **Expand evaluation:** Add a larger gold dataset, automated metrics (precision/recall, EM/F1), and CI-based regression tests.  
-2. **Safety & privacy:** Add PII detection/redaction pre-ingest and an opt-in policy for sensitive data.  
-3. **Configuration & tuning:** Expose chunk size, overlap, top-K, and reranker toggles for easy experimentation.  
-4. **Performance improvements:** Add caching, batching, and optional ANN settings to reduce latency.  
-5. **Testing & robustness:** Add unit/integration tests with mocked APIs and an e2e smoke test.  
-6. **Production readiness:** Add incremental ingestion, doc versioning, and monitoring (latency, cost, retrieval quality).
-
-
-  ## Resume and Portfolio
-  - **Resume**: https://drive.google.com/file/d/1laIpa8nPc1Ut6dMhUm49TgZCwoBQcVoH/view?usp=drive_link
-  - **Portfolio**: https://vinaymendole.vercel.app
+## 🚧 Future Improvements
+- Larger and automated evaluation datasets
+- Configurable retrieval and chunking parameters
+- Caching and batching for performance
+- Incremental document ingestion
+- PII detection and safety filters
+- End-to-end testing and monitoring
+  
+---
+## Resume:
+https://purple-sarajane-55.tiiny.site
+## Portfolio:
+https://mini-rag-eta.vercel.app/
